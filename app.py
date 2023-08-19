@@ -46,15 +46,15 @@ brand_df_col_dict = {
     'crno': str,
 }
 
-corp_df_col_dict = {
-    '대분류': str,
-    'name': str,
-    'e_idx': str,
-    's_idx': str,
-    'g_idx': str,
-    'jurir_no': str,
-    'bizr_no': str,
-}
+# corp_df_col_dict = {
+#     '대분류': str,
+#     'name': str,
+#     'e_idx': str,
+#     's_idx': str,
+#     'g_idx': str,
+#     'jurir_no': str,
+#     'bizr_no': str,
+# }
 
 eng_cat_dict = {
     "(건강)식품": "healthy food",
@@ -111,7 +111,7 @@ personality_dict = {
 # data 선언
 spending_df = pd.read_csv("data/proecessed_spending_df.csv", encoding="utf-8")
 brand_df = pd.read_csv("./data/brand_df.csv", dtype=brand_df_col_dict, encoding="utf-8-sig")
-corp_df = pd.read_csv("./data/corp_df.csv", dtype=corp_df_col_dict, encoding="utf-8")
+# corp_df = pd.read_csv("./data/corp_df.csv", dtype=corp_df_col_dict, encoding="utf-8")
 
 with open("./data/brand_brno_dict.json", "r") as json_file:
     brand_brno_dict = json.load(json_file)
