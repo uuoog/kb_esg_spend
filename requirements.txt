@@ -1,0 +1,11 @@
+streamlit
+pandas
+matplotlib
+scikit-learn
+numpy
+tqdm
+Pillow
+konlpy
+streamlit_folium
+folium
+db-dtypes
