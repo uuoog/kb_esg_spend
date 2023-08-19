@@ -1,11 +1,12 @@
 streamlit
-pandas
+Pillow
 matplotlib
+google-oauth2-tool
+tqdm
+pandas
 scikit-learn
 numpy
 tqdm
-Pillow
 konlpy
-streamlit_folium
-folium
 db-dtypes
+time
