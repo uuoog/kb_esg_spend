@@ -1,12 +1,8 @@
 streamlit
 Pillow
-matplotlib
 google-oauth2-tool
+matplotlib
 tqdm
 pandas
-scikit-learn
 numpy
 tqdm
-konlpy
-db-dtypes
-time
