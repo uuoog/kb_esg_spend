@@ -113,8 +113,8 @@ spending_df = pd.read_csv("data/proecessed_spending_df.csv", encoding="utf-8")
 brand_df = pd.read_csv("./data/brand_df.csv", dtype=brand_df_col_dict, encoding="utf-8-sig")
 # corp_df = pd.read_csv("./data/corp_df.csv", dtype=corp_df_col_dict, encoding="utf-8")
 
-with open("./data/brand_brno_dict.json", "r") as json_file:
-    brand_brno_dict = json.load(json_file)
+# with open("./data/brand_brno_dict.json", "r") as json_file:
+#     brand_brno_dict = json.load(json_file)
 
 with open("./data/brand_ctg_dict.json", "r") as json_file:
     brand_ctg_dict = json.load(json_file)
