@@ -1,9 +1,9 @@
 streamlit
 Pillow
-google-oauth2-tool
 openai
 matplotlib
 tqdm
 pandas
 numpy
 tqdm
+seaborn
