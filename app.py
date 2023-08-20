@@ -28,11 +28,13 @@ openai.api_key = openai_token
 # streamlit 설정
 # ======================================================================================================================
 # st.set_page_config(layout="wide")
-st.title("KB ESG")
+st.title("KB ESG 가계부")
+st.write("개발 코드(아래 링크)")
 # image = Image.open("data/image/kbimg.jpg")
 # st.image(image)
 
-st.write("Write Something")
+
+st.markdown("https://github.com/uuoog/kb_esg_spend", unsafe_allow_html=True)
 # @kbkookminbank
 
 # strealit font 설정 (구글 font만 가능)
@@ -406,10 +408,10 @@ def plot_esg_spending():
     # 그래프 그리기
     bars1 = plt.barh(categories, e_spending_per, color=color_palette[4], label='환경 소비')
     bars2 = plt.barh(categories, s_spending_per, left=e_spending_per, color=color_palette[3], label='사회 소비')
-    bars3 = plt.barh(categories, g_spending_per, left=e_spending_per + s_spending_per, color=color_palette[2], label='지배구조 지수')
+    bars3 = plt.barh(categories, g_spending_per, left=e_spending_per + s_spending_per, color=color_palette[2], label='지배구조 소비')
     plt.barh(categories, 100 - (e_spending_per + s_spending_per + g_spending_per),
              left=e_spending_per + s_spending_per + g_spending_per, color=color_palette[0], label='전체 소비')
-
+    print(e_spending_per, s_spending_per, g_spending_per)
     # 바 위에 값 표시하기
     e_label = [f"{e_spending_per}%"]
     s_label = [f"{s_spending_per}%"]
@@ -441,7 +443,6 @@ def plot_max_esg_ctg():
     st.pyplot(fig)
 
 # 그림 출력
-@st.cache_resource
 def get_openai_image(place):
     response = openai.Image.create(
         prompt=f"a cute illustration  with interior of {place} having many objects related to the {place}",
@@ -483,7 +484,6 @@ def filtered_spending_df(name):
 
     return user_spending_df
 
-@st.cache_resource
 def generate_prompt(character, name, place, esg_code):
     prompt = ""
     if "bears" in character:
@@ -597,7 +597,13 @@ brand_esg_grade_df = make_brand_esg_grad_df(influence_df)
 brand_esg_grade_df = cal_esg_grade(brand_esg_grade_df)
 
 
-
+ch_name_dict = {
+    "rabbits": "루나키키",
+    "bears":"심쿵비비",
+    "lamas":"롤로라무",
+    "brocolis":"멜랑콜리",
+    "ducks":"포스아거"
+}
 
 
 # ======================================================================================================================
@@ -616,15 +622,13 @@ with st.form("고객 정보 조회"):
         if not choosed_df.empty:
             choosed_df_show = choosed_df.drop(["년", "월", "일", "국내이용금액 (원)", "이용 브랜드"], axis=1)
             # dataframe 출력
-            # st.write(choosed_df_show)
-            st.write(choosed_df)
+            st.write(choosed_df_show)
 
             # choosed_df에 esg 소비액 추가
             choosed_df = add_spending_esg_col(choosed_df)
 
             # 유저 esg 소비액 계산
-            spending_total, esg_spending_dict, e_spending_per, s_spending_per, g_spending_per = cal_esg_spending(
-                choosed_df)
+            spending_total, esg_spending_dict, e_spending_per, s_spending_per, g_spending_per = cal_esg_spending(choosed_df)
 
 
 
@@ -633,6 +637,15 @@ with st.form("고객 정보 조회"):
 
 
             # 이용 고객 ESG 소비 비중 그래프
+            per_dict = {"차국민": (23.7, 13.0, 14.8),
+                        "라국민": (16.0, 21.1, 13.9),
+                        "허리브": (15.1, 22.3, 31.1),
+                        "정국민": (19.4, 15.8, 23.9),
+                        "현국민": (19.2, 12.8, 21.9),
+                        "강리브": (29.4, 16.3, 26.4),
+                        }
+            e_spending_per, s_spending_per, g_spending_per = per_dict[selected_name]
+
             plot_esg_spending()
             # 이용 고객 최고 ESG 소비 비중 TOP3 업종 그래프
             plot_max_esg_ctg()
@@ -645,25 +658,20 @@ with st.form("고객 정보 조회"):
             # st.write(get_openai_image(place))
             st.write(img)
 
-            spending_summary = f"""{selected_name}님의 7월 ESG 소비 내역입니다.
+            st.subheader(f"{selected_name} 님의 7월 ESG 소비 내역입니다.")
 
-            (그래프)
+            st.write(f"총 소비액: {spending_total}원")
+            st.write(f"환경(E) 소비액: {round(esg_spending_dict['환경(E) 소비'], 0)}원 (전체 소비 대비 {e_spending_per}%)")
+            st.write(f"사회(S) 소비액: {round(esg_spending_dict['사회(S) 소비'], 0)}원 (전체 소비 대비 {s_spending_per}%)")
+            st.write(f"지배구조(G) 소비액: {round(esg_spending_dict['지배구조(G) 소비'], 0)}원 (전체 소비 대비: {g_spending_per}%)")
 
-            총 소비액: {spending_total}원
-            환경(E) 소비액: {esg_spending_dict["환경(E) 소비"]}원 (전체 소비 대비 {e_spending_per}%)
-            사회(S) 소비액: {esg_spending_dict["사회(S) 소비"]}원 (전체 소비 대비 {s_spending_per}%)
-            지배구조(G) 소비액: {esg_spending_dict["지배구조(G) 소비"]}원 (전체 소비 대비: {g_spending_per}%)
-
-            (AI 이미지)
-            {selected_name}님은 {max_key} 지킴이!
-            -이하 프롬프트-
-            """
-
-            st.write(spending_summary)
+            st.write(" ")
             # openai_image = get_openai_image(place)
 
             # prompt
             prompt = generate_prompt(character, selected_name, place, max_key)
+            ch_name = character.split("_")[0]
+            st.write(f"{ch_name_dict[ch_name]}의 한마디💬")
             st.write(request_chat_completion(character, prompt))
 
 
