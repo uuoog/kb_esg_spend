@@ -14,14 +14,32 @@ import requests
 from io import BytesIO
 import random
 
+# ======================================================================================================================
 # open ai key
-
+# ======================================================================================================================
 os.environ["OPENAI_TOKEN"] = st.secrets["OPENAI_TOKEN"]
 openai_token = os.environ.get("OPENAI_TOKEN")
 if not openai_token:
     raise ValueError("no openai token!")
 openai.api_key = openai_token
 
+
+# ======================================================================================================================
+# streamlit 설정
+# ======================================================================================================================
+# st.set_page_config(layout="wide")
+st.title("KB ESG")
+# image = Image.open("data/image/kbimg.jpg")
+# st.image(image)
+
+st.write("Write Something")
+# @kbkookminbank
+
+# strealit font 설정 (구글 font만 가능)
+font = "Noto Sans Korean"
+
+# strealit 배경색 설정
+backgroundColor = "#F0F0F0"
 
 # plot font 설정
 font_dirs = ['./fonts']
@@ -34,28 +52,70 @@ fm._load_fontmanager(try_read_cache=False)
 plt.rcParams['font.family'] = 'NanumGothicCoding'
 
 # ======================================================================================================================
+# data 선언
+# ======================================================================================================================
+spending_df = pd.read_csv("./data/base_data.csv", encoding="utf-8")
+
+influence_df = pd.read_csv("./data/brand_embedding_label_df.csv")
+# brand_df = pd.read_csv("./data/brand_df.csv", dtype=brand_df_col_dict, encoding="utf-8-sig")
+
 # ======================================================================================================================
 # 변수 선언
+# ======================================================================================================================
 color_palette = ["#ffa505", "#ffb805", "#ffc905", "#ffe505", "#fffb05"]
-brand_df_col_dict = {
-    '대분류': str,
-    '중분류': str,
-    '법인명': str,
-    '브랜드명': str,
-    'brno': str,
-    'crno': str,
-}
-
-# corp_df_col_dict = {
+# brand_df_col_dict = {
 #     '대분류': str,
-#     'name': str,
-#     'e_idx': str,
-#     's_idx': str,
-#     'g_idx': str,
-#     'jurir_no': str,
-#     'bizr_no': str,
+#     '중분류': str,
+#     '법인명': str,
+#     '브랜드명': str,
+#     'brno': str,
+#     'crno': str,
 # }
 
+brand_dict = {
+    "CU":"cu",
+    "쿠팡": "coupang",
+    "다이소":"daiso",
+    "홈플러스":"homeplus",
+    "인터파크":"interpark",
+    "제주항공":"jejuair",
+    "올리브영":"oliveyoung",
+    "세븐일레븐":"seven",
+    "스타벅스":"starbucks",
+    "넷플릭스":"netflix",
+    "GS25":"gs25",
+    "11번가":"11st",
+    "버거킹":"burgerking",
+    "본도시락":"bonif",
+    "애플":"apple",
+    "더벤티":"theventi",
+    "지마켓":"gmarket",
+    "네이버페이":"naverpay",
+    "카카오페이":"cacaopay",
+    "티몬":"tmon",
+    "위메프":"wemap",
+    "크린토피아":"cleantopia",
+    "투썸플레이스":"towsome",
+    "이마트":"emart",
+    "SK브로드밴드":"skbro",
+    "현대해상" : "hdmi",
+    "SK매직":"skmagic",
+    "롯데쇼핑":"lotteshop",
+    "뚜레쥬르":"torejo",
+    "장난감도서관":"toylib",
+    "파리바게뜨":"paba",
+    "무신사":"musinsa",
+    "이디야커피":"ediya",
+    "배스킨라빈스":"br",
+    "롯데리아":"lotteria",
+    "멜론티켓":"melon",
+    "옥션":"auction",
+    "티머니":"tmoney",
+    "우체국":"postoffice",
+    "KT통신":"kytele"
+}
+
+# 업종 분류 : 영어번역
 eng_cat_dict = {
     "(건강)식품": "healthy food",
     "종합소매점, 기타도소매, 농수산물": "grocery store",
@@ -99,6 +159,7 @@ eng_cat_dict = {
     "교통" : "traffic",
 }
 
+# 국민은행 캐릭터 성격
 personality_dict = {
     "심쿵비비":"듬직하고 배려깊게 친구들을 잘 보듬어주는 다정다감하고 순둥순둥한 성격",
     "멜랑콜리":"항상 무심한 표정으로 뚱해보이지만 말 없이 친구들을 잘 챙기는 따뜻한 성격",
@@ -107,96 +168,188 @@ personality_dict = {
     "루나키키":"호불호가 분명하고 감정표현이 자유분방하며, 솔직하고 뒤 끝 없는 성격"
 }
 
-# ======================================================================================================================
-# data 선언
-spending_df = pd.read_csv("data/proecessed_spending_df.csv", encoding="utf-8")
-brand_df = pd.read_csv("./data/brand_df.csv", dtype=brand_df_col_dict, encoding="utf-8-sig")
-# corp_df = pd.read_csv("./data/corp_df.csv", dtype=corp_df_col_dict, encoding="utf-8")
+# 각 등급별 하위 몇%
+idx_grade_dict = {
+    "S": 0.9,
+    "A": 0.6,
+    "B": 0.4,
+    "C": 0.2,
+    "D": 0.1,
+}
 
-# with open("./data/brand_brno_dict.json", "r") as json_file:
-#     brand_brno_dict = json.load(json_file)
-
-with open("./data/brand_ctg_dict.json", "r") as json_file:
-    brand_ctg_dict = json.load(json_file)
-# ======================================================================================================================
-
-st.title("KB ESG")
-# image = Image.open("data/image/kbimg.jpg")
-# st.image(image)
-
-st.write("Write Something")
-# @kbkookminbank
-
-
+# 브랜드 리스트
+brand_list = list(spending_df["이용 브랜드"].unique())
 
 # ======================================================================================================================
 # 함수 선언
 # ======================================================================================================================
 
-# esg 소비액, 이용 브랜드명, 업종 칼럼 추가
-@st.cache_resource
-def add_col(spending_df):
-    grade_dict = {
-        "S": 1,
-        "A+": 0.85,
-        "A": 0.71,
-        "B+": 0.57,
-        "B": 0.42,
-        "C": 0.28,
-        "D": 0.14,
+
+# 각 브랜드별 ESG 성적표 df 제작
+def make_brand_esg_grad_df(influence_df):
+    data = {
+        "브랜드 이름": [],
+        "환경 점수": [],
+        "사회 점수": [],
+        "지배구조 점수": []
     }
+    grade_dict = {"매우 긍정적인 영향력": 10,
+                  "약간 긍정적인 영향력": 5,
+                  "약간 부정적인 영향력": -5,
+                  "매우 부정적인 영향력": -10,
+                  }
 
-    brand_list = []
+    # 성적 담을 빈 데이터프레임 제작
+    brand_esg_grade_df = pd.DataFrame(data)
 
-    brand_df["이용 브랜드"] = ""
-    brand_df["카테고리"] = ""
+    green = "환경"
+    social = "사회"
+    gover = "지배구조"
 
-    spending_df["환경(E) 소비"] = 0
-    spending_df["사회(S) 소비"] = 0
-    spending_df["지배구조(S) 소비"] = 0
+    for brand in tqdm(brand_list):
+        green_weight = 0
+        social_weight = 0
+        gover_weight = 0
 
-    for i in tqdm(range(len(spending_df))):
+        filtered_brand_df = influence_df[influence_df["브랜드 이름"] == brand]
 
-        for j in range(len(brand_df)):
+        # 영향력 수치화
+        for i in range(len(filtered_brand_df)):
+            influence = filtered_brand_df.iloc[i]["영향력"]
+            if filtered_brand_df.iloc[i]["지표"] == green:
+                green_weight += grade_dict[influence]
+            elif filtered_brand_df.iloc[i]["지표"] == social:
+                social_weight += grade_dict[influence]
+            else:
+                gover_weight += grade_dict[influence]
 
-            if brand_df.iloc[j]["브랜드명"].replace(" ", "") in spending_df.iloc[i]["이용하신곳"].replace(" ", ""):
-                brand_name = brand_df.iloc[j]["브랜드명"]
-                spending_df.loc[i, "이용 브랜드"] = brand_name
+        # concat() 함수를 사용하여 데이터프레임을 병합
+        new_row = pd.DataFrame({
+            "브랜드 이름": [brand],
+            "환경 점수": [green_weight],
+            "사회 점수": [social_weight],
+            "지배구조 점수": [gover_weight]
+        })
 
-                ctg = brand_ctg_dict[brand_name]
-                spending_df.loc[i, "카테고리"] = ctg
+        # 데이터 추가
+        brand_esg_grade_df = pd.concat([brand_esg_grade_df, new_row], ignore_index=True)
 
-                # br_no = brand_brno_dict[brand_name]
-                #
-                # if not corp_df[corp_df["bizr_no"] == br_no]["name"].empty:
-                #     brand_list.append((i, brand_name, corp_df[corp_df["bizr_no"] == br_no]["name"].item()))
+    brand_esg_grade_df = brand_esg_grade_df.fillna(0)
 
-                    # 등급별 가중치로 소비액 계산
-                    # spending_money = spending_df.iloc[i]["국내이용금액 (원)"]
-
-                    # # 기업별 등급 가져오기
-                    # if not corp_df[corp_df["bizr_no"] == br_no]["e_idx"].empty:
-                    #     e_idx = corp_df.loc[corp_df["bizr_no"] == br_no, "e_idx"].item()
-                    #     spending_df.loc[i, "환경(E) 소비"] = spending_money * grade_dict[e_idx]
-                    #
-                    # if not corp_df[corp_df["bizr_no"] == br_no]["s_idx"].empty:
-                    #     s_idx = corp_df.loc[corp_df["bizr_no"] == br_no, "s_idx"].item()
-                    #     spending_df.loc[i, "사회(S) 소비"] = spending_money * grade_dict[s_idx]
-                    #
-                    # if not corp_df[corp_df["bizr_no"] == br_no]["g_idx"].empty:
-                    #     g_idx = corp_df.loc[corp_df["bizr_no"] == br_no, "g_idx"].item()
-                    #     spending_df.loc[i, "지배구조(S) 소비"] = spending_money * grade_dict[g_idx]
-
-                    # break
-
-    spending_df[["환경(E) 소비", "사회(S) 소비", "지배구조(S) 소비"]] = spending_df[["환경(E) 소비", "사회(S) 소비", "지배구조(S) 소비"]].fillna(0)
-
-    return spending_df
+    return brand_esg_grade_df
 
 
-# esg 소비액 계산
+# 전체 브랜드 대비 특정 브랜드가 상위 n%인지 계산하여 등급 매기기
+def cal_esg_grade(brand_esg_grade_df):
+    brand_esg_grade_df = brand_esg_grade_df.fillna(0)  # 새로운 DataFrame으로 할당
 
-def cal_esg_spending(spending_df):
+    # 각 지표별 총합 점수 계산
+    green_total_score = int(brand_esg_grade_df["환경 점수"].sum())
+    social_total_score = int(brand_esg_grade_df["사회 점수"].sum())
+    gover_total_score = int(brand_esg_grade_df["지배구조 점수"].sum())
+
+    # 점수 초기화
+    brand_esg_grade_df["환경 지수"] = ""
+    brand_esg_grade_df["사회 지수"] = ""
+    brand_esg_grade_df["지배구조 지수"] = ""
+
+    # 브랜드 리스트의 브랜드별로 계산
+    for brand in brand_list:
+        filtered_brand_df = brand_esg_grade_df[brand_esg_grade_df["브랜드 이름"] == brand]
+
+        green_score = filtered_brand_df["환경 점수"].item()
+        social_score = filtered_brand_df["사회 점수"].item()
+        gover_score = filtered_brand_df["지배구조 점수"].item()
+
+        if green_total_score != 0 and social_total_score != 0 and gover_total_score != 0:
+            green_pie = green_score / green_total_score
+            social_pie = social_score / social_total_score
+            gover_pie = gover_score / gover_total_score
+        else:
+            green_pie = 0
+            social_pie = 0
+            gover_pie = 0
+
+
+        if green_pie >= idx_grade_dict["S"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "환경 지수"] = "S"
+        elif green_pie >= idx_grade_dict["A"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "환경 지수"] = "A"
+        elif green_pie >= idx_grade_dict["B"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "환경 지수"] = "B"
+        elif green_pie >= idx_grade_dict["C"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "환경 지수"] = "C"
+        else:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "환경 지수"] = "D"
+
+        if social_pie >= idx_grade_dict["S"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "사회 지수"] = "S"
+        elif social_pie >= idx_grade_dict["A"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "사회 지수"] = "A"
+        elif social_pie >= idx_grade_dict["B"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "사회 지수"] = "B"
+        elif social_pie >= idx_grade_dict["C"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "사회 지수"] = "C"
+        else:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "사회 지수"] = "D"
+
+        if gover_pie >= idx_grade_dict["S"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "지배구조 지수"] = "S"
+        elif gover_pie >= idx_grade_dict["A"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "지배구조 지수"] = "A"
+        elif gover_pie >= idx_grade_dict["B"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "지배구조 지수"] = "B"
+        elif gover_pie >= idx_grade_dict["C"]:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "지배구조 지수"] = "C"
+        else:
+            brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand, "지배구조 지수"] = "D"
+
+    # 브랜드 ESG 성적표가 담긴 df 반환
+    return brand_esg_grade_df
+
+
+# choosed_df에 esg 소비액 추가
+def add_spending_esg_col(choosed_df):
+    idx_grade_dict = {
+        "S": 0.9,
+        "A": 0.6,
+        "B": 0.4,
+        "C": 0.2,
+        "D": 0.1,
+    }
+    choosed_brand_list = choosed_df["이용 브랜드"].unique()
+
+    for brand in choosed_brand_list:
+        # 브랜드 성적표 df에서 변수 추출
+        e_idx = brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand]["환경 지수"][0]
+        s_idx = brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand]["사회 지수"][0]
+        g_idx = brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand]["지배구조 지수"][0]
+
+        # 가중치 계산
+        e_weight = idx_grade_dict[e_idx]
+        s_weight = idx_grade_dict[s_idx]
+        g_weight = idx_grade_dict[g_idx]
+
+        # 특정 브랜드에 해당하는 행들 조회
+        filtered_rows = choosed_df.loc[choosed_df["이용 브랜드"] == brand]
+
+        # "환경 소비" 칼럼에 새로운 값으로 업데이트
+        for index in filtered_rows.index:
+            e_spending = choosed_df.loc[index, "국내이용금액 (원)"] * e_weight
+            s_spending = choosed_df.loc[index, "국내이용금액 (원)"] * s_weight
+            g_spending = choosed_df.loc[index, "국내이용금액 (원)"] * g_weight
+
+            choosed_df.loc[index, "환경(E) 소비"] = e_spending
+            choosed_df.loc[index, "사회(S) 소비"] = s_spending
+            choosed_df.loc[index, "지배구조(G) 소비"] = g_spending
+
+    choosed_df[["환경(E) 소비", "사회(S) 소비", "지배구조(S) 소비"]] = choosed_df[["환경(E) 소비", "사회(S) 소비", "지배구조(S) 소비"]].fillna(0)
+
+    return choosed_df
+
+
+# 유저 esg 소비액 계산
+def cal_esg_spending(choosed_df):
     # 소비액 계산
     esg_spending_dict = {
         "환경(E) 소비": 0,
@@ -204,11 +357,11 @@ def cal_esg_spending(spending_df):
         "지배구조(S) 소비": 0
     }
 
-    spending_total = spending_df["국내이용금액 (원)"].sum()
+    spending_total = choosed_df["국내이용금액 (원)"].sum()
 
-    esg_spending_dict["환경(E) 소비"] = spending_df["환경(E) 소비"].sum()
-    esg_spending_dict["사회(S) 소비"] = spending_df["사회(S) 소비"].sum()
-    esg_spending_dict["지배구조(S) 소비"] = spending_df["지배구조(S) 소비"].sum()
+    esg_spending_dict["환경(E) 소비"] = choosed_df["환경(E) 소비"].sum()
+    esg_spending_dict["사회(S) 소비"] = choosed_df["사회(S) 소비"].sum()
+    esg_spending_dict["지배구조(S) 소비"] = choosed_df["지배구조(S) 소비"].sum()
 
     e_spending_per = round(esg_spending_dict["환경(E) 소비"] * 100 / spending_total, 2)
     s_spending_per = round(esg_spending_dict["사회(S) 소비"] * 100 / spending_total, 2)
@@ -426,6 +579,18 @@ def request_chat_completion(character, prompt):
     )
     return response["choices"][0]["message"]["content"]
 
+# ======================================================================================================================
+
+# ======================================================================================================================
+# 각 브랜드별 ESG 성적표 df 제작
+brand_esg_grade_df = make_brand_esg_grad_df(influence_df)
+
+
+brand_esg_grade_df = cal_esg_grade(brand_esg_grade_df)
+
+
+
+
 
 # ======================================================================================================================
 # streamlit code
@@ -441,23 +606,23 @@ with st.form("고객 정보 조회"):
         choosed_df = filtered_spending_df(selected_name)
 
         if not choosed_df.empty:
-            # spending_df 칼럼 추가
-            choosed_df = add_col(choosed_df)
-            choosed_df_show = choosed_df.drop(["년", "월", "일", "국내이용금액 (원)"], axis=1)
+            choosed_df_show = choosed_df.drop(["년", "월", "일", "국내이용금액 (원)", "이용 브랜드"], axis=1)
             # dataframe 출력
-            st.write(choosed_df_show)
-            # st.write(choosed_df)
+            # st.write(choosed_df_show)
+            st.write(choosed_df)
 
+            # choosed_df에 esg 소비액 추가
+            choosed_df = add_spending_esg_col(choosed_df)
 
-            # ESG 지표별 소비액 계산
+            # 유저 esg 소비액 계산
             spending_total, esg_spending_dict, e_spending_per, s_spending_per, g_spending_per = cal_esg_spending(
                 choosed_df)
+
+
 
             # ESG 지표중 최고 지표 기준의 결제 df 생성
             max_key, max_esg_spending_df = make_max_esg_spending_df(choosed_df)
 
-
-            formatted_total = "{:,}".format(choosed_df["국내이용금액 (원)"].sum())
 
             # 이용 고객 ESG 소비 비중 그래프
             plot_esg_spending()
