@@ -320,10 +320,18 @@ def add_spending_esg_col(choosed_df):
     choosed_brand_list = choosed_df["이용 브랜드"].unique()
 
     for brand in choosed_brand_list:
-        # 브랜드 성적표 df에서 변수 추출
-        e_idx = brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand]["환경 지수"][0]
-        s_idx = brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand]["사회 지수"][0]
-        g_idx = brand_esg_grade_df.loc[brand_esg_grade_df["브랜드 이름"] == brand]["지배구조 지수"][0]
+        filtered_brand_data = brand_esg_grade_df[brand_esg_grade_df["브랜드 이름"] == brand]
+
+        if not filtered_brand_data.empty:
+            e_idx = filtered_brand_data["환경 지수"].iloc[0]
+            s_idx = filtered_brand_data["사회 지수"].iloc[0]
+            g_idx = filtered_brand_data["지배구조 지수"].iloc[0]
+        else:
+            e_idx = "D"  # 예외 처리
+            s_idx = "D"  # 예외 처리
+            g_idx = "D"  # 예외 처리
+
+
 
         # 가중치 계산
         e_weight = idx_grade_dict[e_idx]
@@ -343,7 +351,7 @@ def add_spending_esg_col(choosed_df):
             choosed_df.loc[index, "사회(S) 소비"] = s_spending
             choosed_df.loc[index, "지배구조(G) 소비"] = g_spending
 
-    choosed_df[["환경(E) 소비", "사회(S) 소비", "지배구조(S) 소비"]] = choosed_df[["환경(E) 소비", "사회(S) 소비", "지배구조(S) 소비"]].fillna(0)
+    choosed_df[["환경(E) 소비", "사회(S) 소비", "지배구조(G) 소비"]] = choosed_df[["환경(E) 소비", "사회(S) 소비", "지배구조(G) 소비"]].fillna(0)
 
     return choosed_df
 
@@ -354,18 +362,18 @@ def cal_esg_spending(choosed_df):
     esg_spending_dict = {
         "환경(E) 소비": 0,
         "사회(S) 소비": 0,
-        "지배구조(S) 소비": 0
+        "지배구조(G) 소비": 0
     }
 
     spending_total = choosed_df["국내이용금액 (원)"].sum()
 
     esg_spending_dict["환경(E) 소비"] = choosed_df["환경(E) 소비"].sum()
     esg_spending_dict["사회(S) 소비"] = choosed_df["사회(S) 소비"].sum()
-    esg_spending_dict["지배구조(S) 소비"] = choosed_df["지배구조(S) 소비"].sum()
+    esg_spending_dict["지배구조(G) 소비"] = choosed_df["지배구조(G) 소비"].sum()
 
     e_spending_per = round(esg_spending_dict["환경(E) 소비"] * 100 / spending_total, 2)
     s_spending_per = round(esg_spending_dict["사회(S) 소비"] * 100 / spending_total, 2)
-    g_spending_per = round(esg_spending_dict["지배구조(S) 소비"] * 100 / spending_total, 2)
+    g_spending_per = round(esg_spending_dict["지배구조(G) 소비"] * 100 / spending_total, 2)
 
     return spending_total, esg_spending_dict, e_spending_per, s_spending_per, g_spending_per
 
@@ -603,7 +611,7 @@ with st.form("고객 정보 조회"):
     submitted = st.form_submit_button("조회")
 
     if submitted:
-        choosed_df = filtered_spending_df(selected_name)
+        choosed_df = filtered_spending_df(name=selected_name)
 
         if not choosed_df.empty:
             choosed_df_show = choosed_df.drop(["년", "월", "일", "국내이용금액 (원)", "이용 브랜드"], axis=1)
@@ -644,7 +652,7 @@ with st.form("고객 정보 조회"):
             총 소비액: {spending_total}원
             환경(E) 소비액: {esg_spending_dict["환경(E) 소비"]}원 (전체 소비 대비 {e_spending_per}%)
             사회(S) 소비액: {esg_spending_dict["사회(S) 소비"]}원 (전체 소비 대비 {s_spending_per}%)
-            지배구조(G) 소비액: {esg_spending_dict["지배구조(S) 소비"]}원 (전체 소비 대비: {g_spending_per}%)
+            지배구조(G) 소비액: {esg_spending_dict["지배구조(G) 소비"]}원 (전체 소비 대비: {g_spending_per}%)
 
             (AI 이미지)
             {selected_name}님은 {max_key} 지킴이!
