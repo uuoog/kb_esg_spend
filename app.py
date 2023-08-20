@@ -656,23 +656,24 @@ with st.form("고객 정보 조회"):
             place = eng_place
             img, character = get_openai_image(place)
             # st.write(get_openai_image(place))
-            st.write(img)
+            with st.spinner("스타프렌즈가 오고 있어요⭐"):
+                st.write(img)
 
-            st.subheader(f"{selected_name} 님의 7월 ESG 소비 내역입니다.")
+                st.subheader(f"{selected_name} 님의 7월 ESG 소비 내역입니다.")
 
-            st.write(f"총 소비액: {spending_total}원")
-            st.write(f"환경(E) 소비액: {round(esg_spending_dict['환경(E) 소비'], 0)}원 (전체 소비 대비 {e_spending_per}%)")
-            st.write(f"사회(S) 소비액: {round(esg_spending_dict['사회(S) 소비'], 0)}원 (전체 소비 대비 {s_spending_per}%)")
-            st.write(f"지배구조(G) 소비액: {round(esg_spending_dict['지배구조(G) 소비'], 0)}원 (전체 소비 대비: {g_spending_per}%)")
+                st.write(f"총 소비액: {spending_total}원")
+                st.write(f"환경(E) 소비액: {round(esg_spending_dict['환경(E) 소비'], 0)}원 (전체 소비 대비 {e_spending_per}%)")
+                st.write(f"사회(S) 소비액: {round(esg_spending_dict['사회(S) 소비'], 0)}원 (전체 소비 대비 {s_spending_per}%)")
+                st.write(f"지배구조(G) 소비액: {round(esg_spending_dict['지배구조(G) 소비'], 0)}원 (전체 소비 대비: {g_spending_per}%)")
 
-            st.write(" ")
-            # openai_image = get_openai_image(place)
-
-            # prompt
-            prompt = generate_prompt(character, selected_name, place, max_key)
+                st.write(" ")
+                # openai_image = get_openai_image(place)
             ch_name = character.split("_")[0]
-            st.write(f"{ch_name_dict[ch_name]}의 한마디💬")
-            st.write(request_chat_completion(character, prompt))
+            with st.spinner(f"{ch_name_dict[ch_name]}이 인사를 하려고 준비중 이에요"):
+                # prompt
+                prompt = generate_prompt(character, selected_name, place, max_key)
+                st.write(f"{ch_name_dict[ch_name]}의 한마디...💬")
+                st.write(request_chat_completion(character, prompt))
 
 
 
