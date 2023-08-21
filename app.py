@@ -601,7 +601,7 @@ ch_name_dict = {
     "rabbits": "루나키키",
     "bears":"심쿵비비",
     "lamas":"롤로라무",
-    "brocolis":"멜랑콜리",
+    "brocoli":"멜랑콜리",
     "ducks":"포스아거"
 }
 
@@ -654,9 +654,8 @@ with st.form("고객 정보 조회"):
                 eng_place = eng_cat_dict[max_esg_spending_df.iloc[0].name]
 
             place = eng_place
-            img, character = get_openai_image(place)
-            # st.write(get_openai_image(place))
             with st.spinner("스타프렌즈가 오고 있어요⭐"):
+                img, character = get_openai_image(place)
                 st.write(img)
 
                 st.subheader(f"{selected_name} 님의 7월 ESG 소비 내역입니다.")
