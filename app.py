@@ -28,6 +28,8 @@ openai.api_key = openai_token
 # streamlit 설정
 # ======================================================================================================================
 # st.set_page_config(layout="wide")
+
+# st.set_page_config(layout="wide")
 st.title("KB ESG 가계부")
 st.write("개발 코드(아래 링크)")
 # image = Image.open("data/image/kbimg.jpg")
