@@ -28,7 +28,7 @@ plt.rcParams['font.family'] = 'NanumGothicCoding'
 # data 선언
 # ======================================================================================================================
 spending_df = pd.read_csv("./data/base_data.csv", encoding="utf-8")
-influence_df = pd.read_csv("./data/brand_embedding_label_df_re.csv")
+influence_df = pd.read_csv("./data/brand_embedding_label_df.csv")
 
 # ======================================================================================================================
 # 변수 선언
