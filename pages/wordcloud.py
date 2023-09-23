@@ -7,7 +7,6 @@ from tqdm import tqdm
 import streamlit as st
 import pandas as pd
 import numpy as np
-import mpld3
 import time
 import re
 
