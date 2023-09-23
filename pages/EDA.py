@@ -65,12 +65,12 @@ def category_plt(choosed_df):
     choosed_df["카테고리"] = choosed_df["카테고리"].apply(lambda x: "기타" if x in category_counts_less_than_threshold else x)
     category_counts = choosed_df["카테고리"].value_counts()
     # 그래프 크기 설정
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(10, 6))
     bars = plt.bar(category_counts.index, category_counts.values, color=color_palette)
 
     for bar in bars:
         yval = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width() / 2, yval, int(yval), ha='center', va='bottom', fontsize=8)
+        plt.text(bar.get_x() + bar.get_width() / 2, yval, int(yval), ha='center', va='bottom', fontsize=10)
         plt.title(f"{selected_name} 고객님의 카테고리 별 빈도수")
         plt.xlabel("카테고리")
         # 차트 아래에 주석 추가
@@ -81,21 +81,18 @@ def category_plt(choosed_df):
     result_df = choosed_df.groupby("카테고리")["국내이용금액 (원)"].sum().reset_index()
     top_5_brands = result_df.nlargest(5, "국내이용금액 (원)")
     # bar 차트 그리기
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(10, 6))
     bars = plt.bar(top_5_brands["카테고리"], top_5_brands["국내이용금액 (원)"], color=color_palette)
     for bar in bars:
         yval = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width() / 2, yval, format_with_commas(yval), ha='center', va='bottom',
-                 fontsize=8)
-        plt.title("카테고리 별 국내이용금액")
+        plt.text(bar.get_x() + bar.get_width() / 2, yval, format_with_commas(yval), ha='center', va='bottom', fontsize=10)
+        plt.title("카테고리 별 국내이용금액 (원)")
         plt.xlabel("카테고리")
-        plt.ylabel("국내이용금액 (원)")
         plt.yticks([])
 
     # y축 레이블 포맷 지정
     formatter = FuncFormatter(format_with_commas)
     plt.gca().yaxis.set_major_formatter(formatter)
-    # plt.xticks(rotation=45)  # x축 레이블을 45도 회전하여 표시
     st.pyplot(fig)
 
 
@@ -104,15 +101,13 @@ def brand_plt(choosed_df):
     top5_brand = choosed_df["이용 브랜드"].value_counts().head(5)
 
     # 그래프 설정
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(10, 6))
     bars = plt.bar(top5_brand.index, top5_brand.values, color=color_palette)
     for bar in bars:
         yval = bar.get_height()
-        # plt.text(bar.get_x() + bar.get_width() / 2, yval, int(yval), ha='center', va='bottom', fontsize=8)
-        plt.text(bar.get_x() + bar.get_width() / 2, yval, format_with_commas(yval), ha='center', va='bottom', fontsize=8)
+        plt.text(bar.get_x() + bar.get_width() / 2, yval, format_with_commas(yval), ha='center', va='bottom', fontsize=10)
         plt.title(f"{selected_name} 고객님의 이용 브랜드 top5 빈도수")
         plt.xlabel("이용 브랜드")
-        plt.ylabel("빈도수")
         plt.yticks([])
     # 그래프 표시
     st.pyplot(fig)
@@ -120,15 +115,13 @@ def brand_plt(choosed_df):
     result_df = choosed_df.groupby("이용 브랜드")["국내이용금액 (원)"].sum().reset_index()
     top_5_brands = result_df.nlargest(5, "국내이용금액 (원)")
     # 그래프 설정
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(10, 6))
     bars = plt.bar(top_5_brands["이용 브랜드"], top_5_brands["국내이용금액 (원)"], color=color_palette)
     for bar in bars:
         yval = bar.get_height()
-        # plt.text(bar.get_x() + bar.get_width() / 2, yval, int(yval), ha='center', va='bottom', fontsize=8)
-        plt.text(bar.get_x() + bar.get_width() / 2, yval, format_with_commas(yval), ha='center', va='bottom', fontsize=8)
-        plt.title("이용 브랜드 별 상위 5개의 국내이용금액")
+        plt.text(bar.get_x() + bar.get_width() / 2, yval, format_with_commas(yval), ha='center', va='bottom', fontsize=10)
+        plt.title("이용 브랜드 별 상위 5개의 국내이용금액 (원)")
         plt.xlabel("이용 브랜드")
-        plt.ylabel("국내이용금액 (원)")
         plt.yticks([])
     # 그래프 표시
     st.pyplot(fig)
@@ -146,12 +139,21 @@ with st.form("결제 내역 EDA"):
 
     if submitted:
         choosed_df = filtered_spending_df(name=selected_name)
+        top5_brand = choosed_df["이용 브랜드"].value_counts().head(5)
+
+        category_counts = choosed_df["카테고리"].value_counts()
+        threshold = 5
+        category_counts_less_than_threshold = category_counts[category_counts < threshold]
+        choosed_df["카테고리"] = choosed_df["카테고리"].apply(lambda x: "기타" if x in category_counts_less_than_threshold else x)
+        category_counts = choosed_df["카테고리"].value_counts()
+
         st.session_state.brand_list = list(choosed_df["이용 브랜드"].unique())
 
-        # 요약
-        st.markdown(f"{selected_name}의 요약 정보")
-
         if not choosed_df.empty:
+            # 요약
+            st.markdown(f"{selected_name} 고객님의 요약 정보")
+            for category, count in category_counts.items():
+                st.write(f'{category}: {count}')
             category_plt(choosed_df)
             brand_plt(choosed_df)
 

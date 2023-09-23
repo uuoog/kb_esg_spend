@@ -28,16 +28,7 @@ openai.api_key = openai_token
 # streamlit 설정
 # ======================================================================================================================
 # st.set_page_config(layout="wide")
-
-# st.set_page_config(layout="wide")
 st.title("KB ESG 가계부")
-st.write("개발 코드(아래 링크)")
-# image = Image.open("data/image/kbimg.jpg")
-# st.image(image)
-
-
-st.markdown("https://github.com/uuoog/kb_esg_spend", unsafe_allow_html=True)
-# @kbkookminbank
 
 # strealit font 설정 (구글 font만 가능)
 font = "Noto Sans Korean"
@@ -58,23 +49,22 @@ plt.rcParams['font.family'] = 'NanumGothicCoding'
 # ======================================================================================================================
 # data 선언
 # ======================================================================================================================
+brand_df_col_dict = {
+    '대분류': str,
+    '중분류': str,
+    '법인명': str,
+    '브랜드명': str,
+    'brno': str,
+    'crno': str,
+}
 spending_df = pd.read_csv("./data/base_data.csv", encoding="utf-8")
-
 influence_df = pd.read_csv("./data/brand_embedding_label_df.csv")
-# brand_df = pd.read_csv("./data/brand_df.csv", dtype=brand_df_col_dict, encoding="utf-8-sig")
+brand_df = pd.read_csv("./data/brand_df.csv", dtype=brand_df_col_dict, encoding="utf-8-sig")
 
 # ======================================================================================================================
 # 변수 선언
 # ======================================================================================================================
 color_palette = ["#ffa505", "#ffb805", "#ffc905", "#ffe505", "#fffb05"]
-# brand_df_col_dict = {
-#     '대분류': str,
-#     '중분류': str,
-#     '법인명': str,
-#     '브랜드명': str,
-#     'brno': str,
-#     'crno': str,
-# }
 
 brand_dict = {
     "CU":"cu",
@@ -137,7 +127,7 @@ eng_cat_dict = {
     "스포츠": "gym",
     "안경": "optician´s shop",
     "약국": "pharmacy",
-    "오락": "theme park",
+    "오락": "Amusement arcade",
     "운송": "delivery",
     "유아 관련": "baby product store",
     "미용": "hair salon",
@@ -155,7 +145,7 @@ eng_cat_dict = {
     "전자상거래" : "e-commerce",
     "결제대행" : "payment agency",
     "금융/보험" : "finance/insurance",
-    "문화" : "culture",
+    "문화" : "theater",
     "건강/의료" : "health/medical care",
     "통신업" : "telecommunications",
     "대중교통" : "public transport",
@@ -402,6 +392,53 @@ def make_max_esg_spending_df(spending_df):
 
     return max_key, max_esg_spending_df
 
+# brand_esg_grade_df, brand_df에서 필요한칼럼만 추출
+def merged_df(brand_esg_grade_df):
+    merged_df = brand_esg_grade_df.merge(brand_df[['대분류', '중분류', '브랜드명']], left_on='브랜드 이름', right_on='브랜드명', how='left')
+    # 필요 없는 열 "브랜드명"를 삭제합니다.
+    merged_df.drop(columns='브랜드명', inplace=True)
+    filtered_df = merged_df[merged_df["중분류"].notna()]
+    return filtered_df
+
+# 환경, 사회, 지배구조 딕셔너리 만들기
+def top_esg_brand(filtered_df):
+    esg_idx_mapping = {"D": 1, "C": 2, "B": 3, "A": 4, "S": 5}
+
+    # 중분류 기준으로 그룹화하고 환경 지수가 가장 높은 행 추출
+    filtered_df['환경 지수 등급'] = filtered_df['환경 지수'].map(esg_idx_mapping)
+    highest_e_idx_rows = filtered_df.groupby('중분류').apply(lambda group: group[group['환경 지수 등급'] == group['환경 지수 등급'].max()])
+
+    # 중분류 기준으로 그룹화하고 사회 지수가 가장 높은 행 추출
+    filtered_df['사회 지수 등급'] = filtered_df['사회 지수'].map(esg_idx_mapping)
+    highest_s_idx_rows = filtered_df.groupby('중분류').apply(lambda group: group[group['사회 지수 등급'] == group['사회 지수 등급'].max()])
+
+    # 중분류 기준으로 그룹화하고 지배구조 지수가 가장 높은 행 추출
+    filtered_df['지배구조 지수 등급'] = filtered_df['지배구조 지수'].map(esg_idx_mapping)
+    highest_g_idx_rows = filtered_df.groupby('중분류').apply(lambda group: group[group['지배구조 지수 등급'] == group['지배구조 지수 등급'].max()])
+
+    e_top_dict = {}
+    s_top_dict = {}
+    g_top_dict = {}
+
+    for idx, row in highest_e_idx_rows.iterrows():
+        category = row['중분류']
+        brand = row['브랜드 이름']
+        e_idx = row['환경 지수']
+        e_top_dict[category] = {'브랜드 이름': brand, '환경 지수': e_idx}
+
+    for idx, row in highest_s_idx_rows.iterrows():
+        category = row['중분류']
+        brand = row['브랜드 이름']
+        s_idx = row['사회 지수']
+        s_top_dict[category] = {'브랜드 이름': brand, '사회 지수': s_idx}
+
+    for idx, row in highest_g_idx_rows.iterrows():
+        category = row['중분류']
+        brand = row['브랜드 이름']
+        g_idx = row['지배구조 지수']
+        g_top_dict[category] = {'브랜드 이름': brand, '지배구조 지수': g_idx}
+    return e_top_dict, s_top_dict, g_top_dict
+
 # 이용 고객님의 esg 소비 비중 그래프
 def plot_esg_spending():
     fig, ax = plt.subplots(figsize=(10, 2))
@@ -413,7 +450,7 @@ def plot_esg_spending():
     bars3 = plt.barh(categories, g_spending_per, left=e_spending_per + s_spending_per, color=color_palette[2], label='지배구조 소비')
     plt.barh(categories, 100 - (e_spending_per + s_spending_per + g_spending_per),
              left=e_spending_per + s_spending_per + g_spending_per, color=color_palette[0], label='전체 소비')
-    print(e_spending_per, s_spending_per, g_spending_per)
+    # print(e_spending_per, s_spending_per, g_spending_per)
     # 바 위에 값 표시하기
     e_label = [f"{e_spending_per}%"]
     s_label = [f"{s_spending_per}%"]
@@ -447,7 +484,7 @@ def plot_max_esg_ctg():
 # 그림 출력
 def get_openai_image(place):
     response = openai.Image.create(
-        prompt=f"a cute illustration  with interior of {place} having many objects related to the {place}",
+        prompt=f"a cute {place} interior illustration",
         n=1,
         size="1024x1024"
     )
@@ -499,7 +536,7 @@ def generate_prompt(character, name, place, esg_code):
         고객이름: {name}
         최대소비장소: {place}
         ESG 설명: E는 기업의 친환경 경영, S은 기업의 사회적 책임, G는 기업의 투명한 지배구조
-        예시: 안녕 김국민님! 최대소비 장소가 음식점이라니, 정말 맛있는 것들을 좋아하는구나! 😊✨
+        예시: 안녕 김국민님! 최대소비 장소가 음식점이라니, 정말 맛있는 것들을 좋아하는구나! ???
         ---
         """
     elif "brocoli" in character:
@@ -513,7 +550,7 @@ def generate_prompt(character, name, place, esg_code):
         고객이름: {name}
         최대소비장소: {place}
         ESG 설명: E는 기업의 친환경 경영, S은 기업의 사회적 책임, G는 기업의 투명한 지배구조
-        예시: 안녕 김국민님! 최대소비 장소가 음식점이라니, 정말 맛있는 것들을 좋아하는구나! 😊✨
+        예시: 안녕 김국민님! 최대소비 장소가 음식점이라니, 정말 맛있는 것들을 좋아하는구나! ???
         ---
         """
     elif "ducks" in character:
@@ -527,7 +564,7 @@ def generate_prompt(character, name, place, esg_code):
         고객이름: {name}
         최대소비장소: {place}
         ESG 설명: E는 기업의 친환경 경영, S은 기업의 사회적 책임, G는 기업의 투명한 지배구조
-        예시: 안녕 김국민님! 최대소비 장소가 음식점이라니, 정말 맛있는 것들을 좋아하는구나! 😊✨
+        예시: 안녕 김국민님! 최대소비 장소가 음식점이라니, 정말 맛있는 것들을 좋아하는구나! ???
         ---
         """
 
@@ -542,7 +579,7 @@ def generate_prompt(character, name, place, esg_code):
         고객이름: {name}
         최대소비장소: {place}
         ESG 설명: E는 기업의 친환경 경영, S은 기업의 사회적 책임, G는 기업의 투명한 지배구조
-        예시: 안녕 김국민님! 최대소비 장소가 음식점이라니, 정말 맛있는 것들을 좋아하는구나! 😊✨
+        예시: 안녕 김국민님! 최대소비 장소가 음식점이라니, 정말 맛있는 것들을 좋아하는구나! ???
         ---
         """
     else:
@@ -556,7 +593,7 @@ def generate_prompt(character, name, place, esg_code):
         고객이름: {name}
         최대소비장소: {place}
         ESG 설명: E는 기업의 친환경 경영, S은 기업의 사회적 책임, G는 기업의 투명한 지배구조
-        예시: 안녕 김국민님! 최대소비 장소가 음식점이라니, 정말 맛있는 것들을 좋아하는구나! 😊✨
+        예시: 안녕 김국민님! 최대소비 장소가 음식점이라니, 정말 맛있는 것들을 좋아하는구나! ???
         ---
         """
 
@@ -589,15 +626,86 @@ def request_chat_completion(character, prompt):
     )
     return response["choices"][0]["message"]["content"]
 
-# ======================================================================================================================
+
+# 소비 카테고리 추천
+def check_top_brand(choosed_df):
+    idx_grade_dict = {
+        "S": 0.9,
+        "A": 0.6,
+        "B": 0.4,
+        "C": 0.2,
+        "D": 0.1,
+    }
+
+    spending_total, esg_spending_dict, e_spending_per, s_spending_per, g_spending_per = cal_esg_spending(choosed_df)
+
+    min_key = min(esg_spending_dict, key=esg_spending_dict.get)
+    max_category = choosed_df.groupby("카테고리")[min_key].sum().idxmax()
+    max_brand = choosed_df.groupby(["이용 브랜드"])[min_key].sum().idxmax()
+
+    # 현재 가장 적은 ESG 소비에서 가장 많이 소비한 카테고리의 평균 값
+    cat_len = choosed_df[choosed_df["카테고리"] == max_category].groupby("카테고리")[min_key].count()[0]
+    cat_total = choosed_df.groupby("카테고리")[min_key].sum().sort_values(ascending=False)[0]
+    ave_cat = cat_total / cat_len
+
+    # 현재 가장 적은 ESG 소비에서 가장 많이 소비한 카테고리의 실제 소비 평균
+    origin_ave = choosed_df[choosed_df["카테고리"] == max_category]["국내이용금액 (원)"].sum() / cat_len
+
+    message = ""
+
+    if "E" in min_key:
+        if max_category in e_top_dict:
+            rec_brand_info = e_top_dict[max_category]
+            rec_brand_name = rec_brand_info['브랜드 이름']
+            rec_brand_code = rec_brand_info['환경 지수']
+            if_rec_brand = round((origin_ave * idx_grade_dict[rec_brand_code]) / ave_cat, 4)
+            if rec_brand_name != max_brand:
+                message = f"ESG 소비 중 환경 소비가 가장 낮으시네요 ??.\n\n가장 많이 소비를 하시는 {max_category} 분야에서 환경 지수가 제일 높은 브랜드는 '{rec_brand_name}'입니다.\n\n이 브랜드를 사용하시면 환경 소비가 {if_rec_brand}배 증가합니다.\n\n이곳을 사용해보시는건 어떠세요?"
+            else:
+                message = "이미 환경 지수가 가장 높은 브랜드를 사용중이시군요!??"
+        else:
+            message = "해당 카테고리에 대한 정보가 없습니다."
+
+    elif "S" in min_key:
+        if max_category in s_top_dict:
+            rec_brand_info = s_top_dict[max_category]
+            rec_brand_name = rec_brand_info['브랜드 이름']
+            rec_brand_code = rec_brand_info['사회 지수']
+            if_rec_brand = round((origin_ave * idx_grade_dict[rec_brand_code]) / ave_cat, 4)
+            if rec_brand_name != max_brand:
+                message = f"ESG 소비 중 사회 소비가 가장 낮으시네요 ??.\n\n가장 많이 소비를 하시는 {max_category} 분야에서 사회 지수가 제일 높은 브랜드는 '{rec_brand_name}'입니다.\n\n이 브랜드를 사용하시면 환경 소비가 {if_rec_brand}배 증가합니다.\n\n이곳을 사용해보시는건 어떠세요?"
+            else:
+                message = "이미 사회 지수가 가장 높은 브랜드를 사용중이시군요!??"
+        else:
+            message = "해당 카테고리에 대한 정보가 없습니다."
+
+    elif "G" in min_key:
+        if max_category in g_top_dict:
+            rec_brand_info = g_top_dict[max_category]
+            rec_brand_name = rec_brand_info['브랜드 이름']
+            rec_brand_code = rec_brand_info['지배구조 지수']
+            if_rec_brand = round((origin_ave * idx_grade_dict[rec_brand_code]) / ave_cat, 4)
+            if rec_brand_name != max_brand:
+                message = f"ESG 소비 중 지배구조 소비가 가장 낮으시네요 ??.\n\n가장 많이 소비를 하시는 {max_category} 분야에서 지배구조 지수가 제일 높은 브랜드는 '{rec_brand_name}'입니다.\n\n이 브랜드를 사용하시면 환경 소비가 {if_rec_brand}배 증가합니다.\n\n이곳을 사용해보시는건 어떠세요?"
+            else:
+                message = "이미 지배구조 지수가 가장 높은 브랜드를 사용중이시군요!??"
+        else:
+            message = "해당 카테고리에 대한 정보가 없습니다."
+
+    else:
+        message = "유효하지 않은 입력입니다."
+
+    return message
 
 # ======================================================================================================================
 # 각 브랜드별 ESG 성적표 df 제작
 brand_esg_grade_df = make_brand_esg_grad_df(influence_df)
 
-
 brand_esg_grade_df = cal_esg_grade(brand_esg_grade_df)
 
+filtered_df = merged_df(brand_esg_grade_df)
+result = top_esg_brand(filtered_df)
+e_top_dict, s_top_dict, g_top_dict = result
 
 ch_name_dict = {
     "rabbits": "루나키키",
@@ -606,7 +714,6 @@ ch_name_dict = {
     "brocoli":"멜랑콜리",
     "ducks":"포스아거"
 }
-
 
 # ======================================================================================================================
 # streamlit code
@@ -632,11 +739,8 @@ with st.form("고객 정보 조회"):
             # 유저 esg 소비액 계산
             spending_total, esg_spending_dict, e_spending_per, s_spending_per, g_spending_per = cal_esg_spending(choosed_df)
 
-
-
             # ESG 지표중 최고 지표 기준의 결제 df 생성
             max_key, max_esg_spending_df = make_max_esg_spending_df(choosed_df)
-
 
             # 이용 고객 ESG 소비 비중 그래프
             per_dict = {"차국민": (23.7, 13.0, 14.8),
@@ -651,12 +755,14 @@ with st.form("고객 정보 조회"):
             plot_esg_spending()
             # 이용 고객 최고 ESG 소비 비중 TOP3 업종 그래프
             plot_max_esg_ctg()
+            ans = check_top_brand(choosed_df)
+            st.write(ans)
 
             if max_esg_spending_df.iloc[0].name in eng_cat_dict:
                 eng_place = eng_cat_dict[max_esg_spending_df.iloc[0].name]
 
             place = eng_place
-            with st.spinner("스타프렌즈가 오고 있어요⭐"):
+            with st.spinner("스타프렌즈가 오고 있어요?"):
                 img, character = get_openai_image(place)
                 st.write(img)
 
@@ -670,10 +776,10 @@ with st.form("고객 정보 조회"):
                 st.write(" ")
                 # openai_image = get_openai_image(place)
             ch_name = character.split("_")[0]
-            with st.spinner(f"{ch_name_dict[ch_name]}이 인사를 하려고 준비중 이에요"):
+            with st.spinner(f"{ch_name_dict[ch_name]}가 인사를 하려고 준비중 이에요"):
                 # prompt
                 prompt = generate_prompt(character, selected_name, place, max_key)
-                st.write(f"{ch_name_dict[ch_name]}의 한마디...💬")
+                st.write(f"{ch_name_dict[ch_name]}의 한마디...??")
                 st.write(request_chat_completion(character, prompt))
 
 

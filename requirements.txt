@@ -2,9 +2,10 @@ streamlit
 Pillow
 openai
 matplotlib
-tqdm
 pandas
 numpy
 tqdm
 seaborn
 regex
+konlpy
+WordCloud

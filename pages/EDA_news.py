@@ -67,7 +67,7 @@ def plot_esg_spending(brand_df):
     society_per = (society_count / total_count) * 100
     governance_per = (governance_count / total_count) * 100
 
-    fig, ax = plt.subplots(figsize=(6, 2))
+    fig, ax = plt.subplots(figsize=(10, 2))
     categories = ["ESG 소비 비중"]
 
     # 그래프 그리기
@@ -169,7 +169,7 @@ def influence_plt(brand_df):
             pass
 
 with st.form("브랜드 뉴스 기사 조회"):
-    st.title('브랜드 뉴스 기사 조회')
+    st.title('브랜드 ESG뉴스 기사 조회')
     # brand_list = st.session_state.brand_list
     selected_brand = st.text_input("브랜드 이름을 입력하세요:")
     submitted2 = st.form_submit_button("조회")
