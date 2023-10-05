@@ -6,10 +6,6 @@ import os
 import streamlit as st
 import pandas as pd
 import matplotlib.font_manager as fm
-import json
-import seaborn as sns
-import numpy as np
-import re
 import requests
 from io import BytesIO
 import random
@@ -734,6 +730,18 @@ def check_top_brand(choosed_df):
 
     else:
         message = "유효하지 않은 입력입니다."
+
+    # 막대그래프 그리기
+    fig, ax = plt.subplots(figsize=(15, 3))
+    categories = ['타 브랜드 평균', rec_brand_name]
+    values = [ave_cat, origin_ave * idx_grade_dict[rec_brand_code]]
+    plt.bar(categories, values, color=color_palette, width=0.4)
+    # 축 레이블, 그래프 제목 등 설정
+    plt.title(f"{selected_name}님의 {max_category} 카테고리 {min_key} 지수 브랜드 비교")
+
+    # 그래프 표시
+    plt.tight_layout()
+    st.pyplot(fig)
 
     return message
 

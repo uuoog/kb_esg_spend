@@ -15,6 +15,8 @@ import re
 # ======================================================================================================================
 # streamlit 설정
 # ======================================================================================================================
+st.set_page_config(layout="wide")
+
 # strealit font 설정 (구글 font만 가능)
 font = "Noto Sans Korean"
 
@@ -35,20 +37,10 @@ plt.rcParams['font.family'] = 'NanumGothicCoding'
 # data 선언
 # ======================================================================================================================
 spending_df = pd.read_csv("./data/base_data.csv", encoding="utf-8")
-# influence_df = pd.read_csv("./data/influence_df.csv")
 influence_df = pd.read_csv("./data/news_wordcloud_by_brand.csv")
 
 influence_df['날짜'] = pd.to_datetime(influence_df['날짜'])
 influence_df['날짜'] = influence_df['날짜'].dt.strftime('%Y-%m-%d')
-
-# # # error brand 수정
-# influence_df["본문"] = influence_df["본문"] + " " + influence_df["브랜드"]
-# #
-# # # 제거할 단어들 리스트 생성
-# words_to_remove = ["사진", "기사", "기자", "홍", "한준호", "박지훈", "기자", "관련", "컴", "부문", "이후", "후", "텐", "송", "배", "처", "운모", "이다", "말", "류", "얼", "정", "때", "그간", "이후", "을", "잔", "종성", "린지", "큐", "텐", "김진근", "섭", "항", "얼", "리", "입", "갑지", "토피아", "로", "의", "가운데", "로", "먹", "태", "깡", "지난해", "링", "이날", "닷", "컴", "신", "뉴스1", "배"]
-# # # 제거할 단어들이 포함된 행 제거
-# influence_df = influence_df[~influence_df['본문'].str.contains('|'.join(words_to_remove))]
-
 influence_df["nouns"] = influence_df["nouns"].apply(eval)
 
 # ======================================================================================================================
@@ -198,28 +190,6 @@ def influence_plt(brand_df):
         else:
             pass
 
-
-# 정규 표현식을 사용하여 특수문자 제거
-def remove_special_characters(text):
-    # text = re.sub(r'[^가-힣a-zA-Z\s]', ' ', text)
-    text = re.sub(r'[^가-힣a-zA-Z\s"GS25"11번가]', ' ', text)
-    return text
-
-@st.cache_data
-# 기사 본문 tokenize
-def tokenize(x):
-    try:
-        tokens = komoran.pos(x)
-        return tokens
-    except Exception as e:
-        # print(e, x)
-        return None
-
-
-# 명사 분리
-def extract_nouns(tokens):
-    return [text for text, tag in tokens if tag in ("NNP", "NNG")]
-
 # wordcloud 생성
 def visualize_wordcloud(word_count, color, mask_image):
     wordcloud = WordCloud(
@@ -254,7 +224,6 @@ with st.form("브랜드 뉴스 기사 조회"):
 
         if not e_content_nouns_series.empty:
             for content_nouns in tqdm(e_content_nouns_series):
-                # count_words(content_nouns)
                 brand_name_nouns = set(content_nouns).intersection(brand)
                 for brand_name in brand_name_nouns:
                     c = Counter([x for x in content_nouns if x != brand_name])
@@ -283,7 +252,7 @@ with st.form("브랜드 뉴스 기사 조회"):
                 g_wordcloud_image = visualize_wordcloud(g_word_count_dict[selected_brand], "YlOrBr", g_mask_image)
 
             with st.spinner("데이터를 불러오는 중..."):
-                st.dataframe(brand_df[["제목", "esg_idx", "영향력", "url"]], column_config={"url": st.column_config.LinkColumn("URL")}, height=200)
+                st.dataframe(brand_df[["제목", "esg_idx", "영향력", "url"]], column_config={"url": st.column_config.LinkColumn("URL")}, height=200, width=2000)
                 plot_esg_spending(brand_df)
                 influence_plt(brand_df)
 
