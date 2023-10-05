@@ -166,13 +166,17 @@ def influence_plt(brand_df):
             # 범례 항목 생성을 위한 조건 추가
             legend_labels = []
             if vpos_per > 0:
-                legend_labels.append('매우 긍정')
+                bars1[0].set_label('매우 긍정')
+                legend_labels.append(bars1[0])
             if pos_per > 0:
-                legend_labels.append('약간 긍정')
+                bars2[0].set_label('약간 긍정')
+                legend_labels.append(bars2[0])
             if neg_per > 0:
-                legend_labels.append('약간 부정')
+                bars3[0].set_label('약간 부정')
+                legend_labels.append(bars3[0])
             if vneg_per > 0:
-                legend_labels.append('매우 부정')
+                bars4[0].set_label('매우 부정')
+                legend_labels.append(bars4[0])
 
             plt.bar_label(bars1, label_type='center', labels=vpos_label)
             plt.bar_label(bars2, label_type='center', labels=pos_label)
@@ -184,8 +188,7 @@ def influence_plt(brand_df):
             plt.yticks([])
             plt.annotate(f"총 {total_count} 건", (1, 1.05), xycoords='axes fraction', ha='right', fontsize=10, color='black')
 
-            # if len(legend_labels) > 0:
-            plt.legend(legend_labels, bbox_to_anchor=(1.01, 1))
+            plt.legend(handles=legend_labels, bbox_to_anchor=(1.01, 1))
             st.pyplot(fig)
         else:
             pass
