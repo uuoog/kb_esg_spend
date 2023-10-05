@@ -29,7 +29,7 @@ plt.rcParams['font.family'] = 'NanumGothicCoding'
 # data 선언
 # ======================================================================================================================
 spending_df = pd.read_csv("./data/base_data.csv", encoding="utf-8")
-influence_df = pd.read_csv("./data/brand_embedding_label_df.csv")
+influence_df = pd.read_csv("./data/influence_df.csv")
 
 # ======================================================================================================================
 # 변수 선언
@@ -52,7 +52,7 @@ def format_with_commas(value):
 
 # 브랜드 데이터 프레임 필터링
 def filtered_brand_df(brand_name):
-    brand_df = influence_df[influence_df["브랜드 이름"] == brand_name]
+    brand_df = influence_df[influence_df["브랜드"] == brand_name]
     brand_df = brand_df.reset_index(drop=True)
     return brand_df
 
@@ -86,7 +86,7 @@ def category_plt(choosed_df):
     for bar in bars:
         yval = bar.get_height()
         plt.text(bar.get_x() + bar.get_width() / 2, yval, format_with_commas(yval), ha='center', va='bottom', fontsize=10)
-        plt.title("카테고리 별 국내이용금액 (원)")
+        plt.title("카테고리 별 국내이용금액 top5 (원)")
         plt.xlabel("카테고리")
         plt.yticks([])
 
@@ -120,7 +120,7 @@ def brand_plt(choosed_df):
     for bar in bars:
         yval = bar.get_height()
         plt.text(bar.get_x() + bar.get_width() / 2, yval, format_with_commas(yval), ha='center', va='bottom', fontsize=10)
-        plt.title("이용 브랜드 별 상위 5개의 국내이용금액 (원)")
+        plt.title("이용 브랜드 별 국내이용금액 top5 (원)")
         plt.xlabel("이용 브랜드")
         plt.yticks([])
     # 그래프 표시
@@ -145,15 +145,14 @@ with st.form("결제 내역 EDA"):
         threshold = 5
         category_counts_less_than_threshold = category_counts[category_counts < threshold]
         choosed_df["카테고리"] = choosed_df["카테고리"].apply(lambda x: "기타" if x in category_counts_less_than_threshold else x)
-        category_counts = choosed_df["카테고리"].value_counts()
+        # category_counts = choosed_df["카테고리"].value_counts()
 
         st.session_state.brand_list = list(choosed_df["이용 브랜드"].unique())
 
         if not choosed_df.empty:
-            # 요약
-            st.markdown(f"{selected_name} 고객님의 요약 정보")
-            for category, count in category_counts.items():
-                st.write(f'{category}: {count}')
-            category_plt(choosed_df)
-            brand_plt(choosed_df)
+            col1, col2 = st.columns(2)
+            with col1:
+                category_plt(choosed_df)
+            with col2:
+                brand_plt(choosed_df)
 
