@@ -208,6 +208,24 @@ def visualize_wordcloud(word_count, color, mask_image):
     wordcloud_image = wordcloud.to_image()
     return wordcloud_image
 
+# main news 시각화
+def brand_main_news(brand_df):
+    e_positive_df = brand_df[(brand_df["esg_idx"] == "환경") & (brand_df["영향력"] == "매우 긍정적인 영향력")].head(1)
+    s_positive_df = brand_df[(brand_df["esg_idx"] == "사회") & (brand_df["영향력"] == "매우 긍정적인 영향력")].head(1)
+    g_positive_df = brand_df[(brand_df["esg_idx"] == "지배구조") & (brand_df["영향력"] == "매우 긍정적인 영향력")].head(1)
+
+    e_negative_df = brand_df[(brand_df["esg_idx"] == "환경") & (brand_df["영향력"] == "매우 부정적인 영향력")].head(1)
+    s_negative_df = brand_df[(brand_df["esg_idx"] == "사회") & (brand_df["영향력"] == "매우 부정적인 영향력")].head(1)
+    g_negative_df = brand_df[(brand_df["esg_idx"] == "지배구조") & (brand_df["영향력"] == "매우 부정적인 영향력")].head(1)
+
+    e_brand_df = pd.concat([e_positive_df, e_negative_df], axis=0)
+    s_brand_df = pd.concat([s_positive_df, s_negative_df], axis=0)
+    g_brand_df = pd.concat([g_positive_df, g_negative_df], axis=0)
+
+    esg_brand_df = pd.concat([e_brand_df, s_brand_df, g_brand_df], axis=0)
+
+    return esg_brand_df
+
 # ======================================================================================================================
 # streamlit code
 # ======================================================================================================================
@@ -224,6 +242,8 @@ with st.form("브랜드 뉴스 기사 조회"):
         e_content_nouns_series = brand_df[brand_df["esg_idx"] == "환경"]["nouns"]
         s_content_nouns_series = brand_df[brand_df["esg_idx"] == "사회"]["nouns"]
         g_content_nouns_series = brand_df[brand_df["esg_idx"] == "지배구조"]["nouns"]
+
+        esg_brand_df = brand_main_news(brand_df)
 
         if not e_content_nouns_series.empty:
             for content_nouns in tqdm(e_content_nouns_series):
@@ -255,7 +275,8 @@ with st.form("브랜드 뉴스 기사 조회"):
                 g_wordcloud_image = visualize_wordcloud(g_word_count_dict[selected_brand], "YlOrBr", g_mask_image)
 
             with st.spinner("데이터를 불러오는 중..."):
-                st.dataframe(brand_df[["제목", "esg_idx", "영향력", "url"]], column_config={"url": st.column_config.LinkColumn("URL")}, height=200, width=2000)
+                st.write("주요 뉴스")
+                st.dataframe(esg_brand_df[["제목", "esg_idx", "영향력", "url"]], column_config={"url": st.column_config.LinkColumn("Link")}, height=200, width=2000)
                 plot_esg_spending(brand_df)
                 influence_plt(brand_df)
 
@@ -276,3 +297,13 @@ with st.form("브랜드 뉴스 기사 조회"):
             st.write("조회 되는 뉴스 기사가 없습니다")
     else:
         st.write("조회 되는 뉴스 기사가 없습니다")
+
+# selected_brand 전체기사 노출
+on = st.toggle('전체 기사 목록')
+
+brand_df = filtered_brand_df(brand_name=selected_brand)
+brand_df.set_index("날짜", inplace=True)
+brand_df.sort_index(ascending=False, inplace=True)
+
+if on:
+    st.write(brand_df)
