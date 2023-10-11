@@ -26,6 +26,10 @@ openai.api_key = openai_token
 st.set_page_config(layout="wide")
 st.title("KB ESG 가계부")
 
+st.markdown("""안녕하세요. 사용자님의 이름을 입력하시면 사용자님의 소비 내역을 ESG 기준으로 분석하여 제공합니다.\n
+더 나아가, ESG 중에서 가장 소비가 적은 분야에 대해 대체 소비를 유도할 수 있도록 해당 카테고리의 지수가 더 높은 브랜드를 추천해 드립니다. 🌟\n
+마지막으로, 은행 마스코트가 포함된 개인화된 이미지와 함께 마스코트 친구가 분석한 소비 패턴을 경험해 보세요!🤩""")
+
 # strealit font 설정 (구글 font만 가능)
 font = "Noto Sans Korean"
 
@@ -545,9 +549,6 @@ def get_openai_image(place):
     # 이미지 합치기
     combined = Image.alpha_composite(openai_image.convert('RGBA'), random_image.convert('RGBA'))
 
-    # 결과 이미지 저장
-    # st.image(combined)
-
     return combined, random_image_filename
 
 
@@ -658,9 +659,10 @@ def request_chat_completion(character, prompt):
         messages=[
             {"role": "system", "content": f"당신은 {per}의 {ch_name}입니다."},
             {"role": "user", "content": prompt}
-        ]
+        ],
+        stream=True
     )
-    return response["choices"][0]["message"]["content"]
+    return response
 
 
 # 소비 카테고리 추천
@@ -700,7 +702,7 @@ def check_top_brand(choosed_df):
             else:
                 message = f"이미 {max_category} 분야에서 환경 지수가 가장 높은 {rec_brand_name} 브랜드를 사용중이시군요!☺️"
         else:
-            message = "해당 카테고리에 대한 정보가 없습니다."
+            message = f"죄송합니다. 환경 지표 중 {max_category} 분야에서 추천 할 브랜드가 아직 없습니다."
 
     elif "S" in min_key:
         if max_category in s_top_dict:
@@ -713,7 +715,7 @@ def check_top_brand(choosed_df):
             else:
                 message = f"이미 {max_category} 분야에서 사회 지수가 가장 높은 {rec_brand_name} 브랜드를 사용중이시군요!☺️"
         else:
-            message = "해당 카테고리에 대한 정보가 없습니다."
+            message = f"죄송합니다. 사회 지표 중 {max_category} 분야에서 추천 할 브랜드가 아직 없습니다."
 
     elif "G" in min_key:
         if max_category in g_top_dict:
@@ -726,22 +728,25 @@ def check_top_brand(choosed_df):
             else:
                 message = f"이미 {max_category} 분야에서 지배구조 지수가 가장 높은 {rec_brand_name} 브랜드를 사용중이시군요!☺️"
         else:
-            message = "해당 카테고리에 대한 정보가 없습니다."
+            message = f"죄송합니다. 지배구조 지표 중 {max_category} 분야에서 추천 할 브랜드가 아직 없습니다."
 
     else:
         message = "유효하지 않은 입력입니다."
 
-    # 막대그래프 그리기
-    fig, ax = plt.subplots(figsize=(15, 3))
-    categories = ['타 브랜드 평균', rec_brand_name]
-    values = [ave_cat, origin_ave * idx_grade_dict[rec_brand_code]]
-    plt.bar(categories, values, color=color_palette, width=0.4)
-    # 축 레이블, 그래프 제목 등 설정
-    plt.title(f"{selected_name}님의 {max_category} 카테고리 {min_key} 지수 브랜드 비교")
+    if max_category == "문화":
+        pass
+    else:
+        # 막대그래프 그리기
+        fig, ax = plt.subplots(figsize=(15, 3))
+        categories = ['타 브랜드 평균', rec_brand_name]
+        values = [ave_cat, origin_ave * idx_grade_dict[rec_brand_code]]
+        plt.bar(categories, values, color=color_palette, width=0.4)
+        # 축 레이블, 그래프 제목 등 설정
+        plt.title(f"{selected_name}님의 {max_category} 카테고리 {min_key} 지수 브랜드 비교")
 
-    # 그래프 표시
-    plt.tight_layout()
-    st.pyplot(fig)
+        # 그래프 표시
+        plt.tight_layout()
+        st.pyplot(fig)
 
     return message
 
@@ -780,7 +785,6 @@ with st.form("고객 정보 조회"):
         if not choosed_df.empty:
             choosed_df_show = choosed_df.drop(["년", "월", "일", "국내이용금액 (원)", "이용 브랜드"], axis=1)
             # dataframe 출력
-            # st.write(choosed_df_show, width=100)
             st.dataframe(choosed_df_show, height=200, width=1500)
 
             # choosed_df에 esg 소비액 추가
@@ -829,9 +833,18 @@ with st.form("고객 정보 조회"):
                 # prompt
                 prompt = generate_prompt(character, selected_name, place, max_key)
                 st.write(f"{ch_name_dict[ch_name]}의 한마디...💬")
-                st.write(request_chat_completion(character, prompt))
+                chatgpt_response = request_chat_completion(character, prompt)
 
-
+                message_placeholder = st.empty()
+                response = ""
+                for chunk in chatgpt_response:
+                    delta = chunk.choices[0]["delta"]
+                    if "content" in delta:
+                        response += delta["content"]
+                        message_placeholder.markdown(response + "▌")
+                    else:
+                        break
+                message_placeholder.markdown(response)
 
 
         else:

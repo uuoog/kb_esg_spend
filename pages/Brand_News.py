@@ -275,7 +275,7 @@ with st.form("브랜드 뉴스 기사 조회"):
                 g_wordcloud_image = visualize_wordcloud(g_word_count_dict[selected_brand], "YlOrBr", g_mask_image)
 
             with st.spinner("데이터를 불러오는 중..."):
-                st.write("주요 뉴스")
+                st.write(f"{selected_brand} ESG 뉴스 top {len(esg_brand_df)}")
                 st.dataframe(esg_brand_df[["제목", "esg_idx", "영향력", "url"]], column_config={"url": st.column_config.LinkColumn("Link")}, height=200, width=2000)
                 plot_esg_spending(brand_df)
                 influence_plt(brand_df)
@@ -296,7 +296,7 @@ with st.form("브랜드 뉴스 기사 조회"):
         else:
             st.write("조회 되는 뉴스 기사가 없습니다")
     else:
-        st.write("조회 되는 뉴스 기사가 없습니다")
+        st.write("")
 
 # selected_brand 전체기사 노출
 on = st.toggle('전체 기사 목록')
@@ -306,4 +306,4 @@ brand_df.set_index("날짜", inplace=True)
 brand_df.sort_index(ascending=False, inplace=True)
 
 if on:
-    st.write(brand_df)
+    st.dataframe(brand_df[["제목", "esg_idx", "영향력", "url"]], column_config={"url": st.column_config.LinkColumn("Link")}, height=200, width=2000)
