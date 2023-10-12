@@ -12,9 +12,7 @@ from st_pages import show_pages_from_config, add_page_title
 # ======================================================================================================================
 # streamlit 설정
 # ======================================================================================================================
-st.set_page_config(layout="wide")
-
-add_page_title()
+add_page_title(layout="wide")
 show_pages_from_config()
 
 # strealit font 설정 (구글 font만 가능)
