@@ -24,7 +24,7 @@ openai.api_key = openai_token
 # streamlit 설정
 # ======================================================================================================================
 st.set_page_config(layout="wide")
-st.title("KB ESG 가계부")
+st.title("온국민 ESG 가계부")
 
 st.markdown("""안녕하세요. 사용자님의 이름을 입력하시면 사용자님의 소비 내역을 ESG 기준으로 분석하여 제공합니다.\n
 더 나아가, ESG 중에서 가장 소비가 적은 분야에 대해 대체 소비를 유도할 수 있도록 해당 카테고리의 지수가 더 높은 브랜드를 추천해 드립니다. 🌟\n
@@ -210,6 +210,8 @@ def make_brand_esg_grad_df(influence_df):
                   "매우 부정적인 영향력": -10,
                   }
 
+    target_month = 9
+
     # 성적 담을 빈 데이터프레임 제작
     brand_esg_grade_df = pd.DataFrame(data)
 
@@ -228,29 +230,29 @@ def make_brand_esg_grad_df(influence_df):
         for i in range(len(filtered_brand_df)):
             influence = filtered_brand_df.iloc[i]["영향력"]
             if filtered_brand_df.iloc[i]["esg_idx"] == green:
-                if filtered_brand_df.iloc[i]["월"] == 9:
+                if filtered_brand_df.iloc[i]["월"] == target_month:
                     green_weight += (grade_dict[influence] * 1.5)
-                elif filtered_brand_df.iloc[i]["월"] == 8:
+                elif filtered_brand_df.iloc[i]["월"] == target_month - 1:
                     green_weight += (grade_dict[influence] * 1.25)
-                elif filtered_brand_df.iloc[i]["월"] == 7:
+                elif filtered_brand_df.iloc[i]["월"] == target_month - 2:
                     green_weight += (grade_dict[influence] * 1.1)
                 else:
                     green_weight += (grade_dict[influence] * 1)
             elif filtered_brand_df.iloc[i]["esg_idx"] == social:
-                if filtered_brand_df.iloc[i]["월"] == 9:
+                if filtered_brand_df.iloc[i]["월"] == target_month:
                     social_weight += (grade_dict[influence] * 1.5)
-                elif filtered_brand_df.iloc[i]["월"] == 8:
+                elif filtered_brand_df.iloc[i]["월"] == target_month - 1:
                     social_weight += (grade_dict[influence] * 1.25)
-                elif filtered_brand_df.iloc[i]["월"] == 7:
+                elif filtered_brand_df.iloc[i]["월"] == target_month - 2:
                     social_weight += (grade_dict[influence] * 1.1)
                 else:
                     social_weight += (grade_dict[influence] * 1)
             else:
-                if filtered_brand_df.iloc[i]["월"] == 9:
+                if filtered_brand_df.iloc[i]["월"] == target_month:
                     gover_weight += (grade_dict[influence] * 1.5)
-                elif filtered_brand_df.iloc[i]["월"] == 8:
+                elif filtered_brand_df.iloc[i]["월"] == target_month - 1:
                     gover_weight += (grade_dict[influence] * 1.25)
-                elif filtered_brand_df.iloc[i]["월"] == 7:
+                elif filtered_brand_df.iloc[i]["월"] == target_month - 2:
                     gover_weight += (grade_dict[influence] * 1.1)
                 else:
                     gover_weight += (grade_dict[influence] * 1)
@@ -807,7 +809,7 @@ with st.form("고객 정보 조회"):
             if max_esg_spending_df.iloc[0].name in eng_cat_dict:
                 eng_place = eng_cat_dict[max_esg_spending_df.iloc[0].name]
 
-            st.subheader(f"{selected_name} 님의 7월 ESG 소비 내역입니다.")
+            st.subheader(f"{selected_name} 님의 9월 ESG 소비 내역입니다.")
 
             st.write(f"총 소비액: {spending_total}원")
             st.write(f"환경(E) 소비액: {round(esg_spending_dict['환경(E) 소비'], 0)}원 (전체 소비 대비 {e_spending_per}%)")

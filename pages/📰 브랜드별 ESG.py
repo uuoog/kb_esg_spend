@@ -231,6 +231,9 @@ def brand_main_news(brand_df):
 # ======================================================================================================================
 with st.form("브랜드 뉴스 기사 조회"):
     st.title('브랜드 ESG뉴스 기사 조회')
+    st.markdown("""
+    원하는 브랜드를 검색하시면, 브랜드별로 ESG 구성 비중과 주요 키워드를 한 눈에 볼 수 있습니다.
+    """)
     selected_brand = st.selectbox('브랜드 이름을 입력하세요:', brand, placeholder='Select...')
     submitted = st.form_submit_button("조회")
 
