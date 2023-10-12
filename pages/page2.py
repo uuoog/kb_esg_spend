@@ -35,7 +35,12 @@ plt.rcParams['font.family'] = 'NanumGothicCoding'
 # data 선언
 # ======================================================================================================================
 spending_df = pd.read_csv("./data/base_data.csv", encoding="utf-8")
-influence_df = pd.read_csv("./data/news_wordcloud_by_brand.csv")
+
+influence_df1 = pd.read_csv("./data/news_wordcloud_by_brand_f1.csv")
+influence_df2 = pd.read_csv("./data/news_wordcloud_by_brand_f2.csv")
+influence_df3 = pd.read_csv("./data/news_wordcloud_by_brand_f3.csv")
+
+influence_df = pd.concat([influence_df1, influence_df2, influence_df3], axis=0)
 
 influence_df['날짜'] = pd.to_datetime(influence_df['날짜'])
 influence_df['날짜'] = influence_df['날짜'].dt.strftime('%Y-%m-%d')
