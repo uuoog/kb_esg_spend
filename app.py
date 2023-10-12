@@ -1,4 +1,3 @@
-from tqdm import tqdm
 from PIL import Image
 from matplotlib import pyplot as plt
 import openai
@@ -219,7 +218,7 @@ def make_brand_esg_grad_df(influence_df):
     social = "사회"
     gover = "지배구조"
 
-    for brand in tqdm(brand_list):
+    for brand in brand_list:
         green_weight = 0
         social_weight = 0
         gover_weight = 0

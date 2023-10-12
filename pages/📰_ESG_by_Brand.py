@@ -4,7 +4,6 @@ from wordcloud import WordCloud
 from matplotlib import pyplot as plt
 from matplotlib.ticker import FuncFormatter
 from PIL import Image
-from tqdm import tqdm
 import matplotlib.font_manager as fm
 import streamlit as st
 import pandas as pd
@@ -249,21 +248,21 @@ with st.form("브랜드 뉴스 기사 조회"):
         esg_brand_df = brand_main_news(brand_df)
 
         if not e_content_nouns_series.empty:
-            for content_nouns in tqdm(e_content_nouns_series):
+            for content_nouns in e_content_nouns_series:
                 brand_name_nouns = set(content_nouns).intersection(brand)
                 for brand_name in brand_name_nouns:
                     c = Counter([x for x in content_nouns if x != brand_name])
                     e_word_count_dict[brand_name] += c
 
         if not s_content_nouns_series.empty:
-            for content_nouns in tqdm(s_content_nouns_series):
+            for content_nouns in s_content_nouns_series:
                 brand_name_nouns = set(content_nouns).intersection(brand)
                 for brand_name in brand_name_nouns:
                     c = Counter([x for x in content_nouns if x != brand_name])
                     s_word_count_dict[brand_name] += c
 
         if not g_content_nouns_series.empty:
-            for content_nouns in tqdm(g_content_nouns_series):
+            for content_nouns in g_content_nouns_series:
                 brand_name_nouns = set(content_nouns).intersection(brand)
                 for brand_name in brand_name_nouns:
                     c = Counter([x for x in content_nouns if x != brand_name])

@@ -3,7 +3,4 @@ openai
 matplotlib
 pandas
 numpy
-tqdm
-seaborn
-regex
 WordCloud
