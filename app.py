@@ -789,7 +789,7 @@ with st.form("고객 정보 조회"):
         if not choosed_df.empty:
             choosed_df_show = choosed_df.drop(["년", "월", "일", "국내이용금액 (원)", "이용 브랜드"], axis=1)
             # dataframe 출력
-            st.dataframe(choosed_df_show, height=200, width=1500)
+            st.dataframe(choosed_df_show, height=200, width=2000)
 
             # choosed_df에 esg 소비액 추가
             choosed_df = add_spending_esg_col(choosed_df)
