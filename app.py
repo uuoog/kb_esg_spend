@@ -8,6 +8,7 @@ import matplotlib.font_manager as fm
 import requests
 from io import BytesIO
 import random
+from st_pages import show_pages_from_config, add_page_title
 
 # ======================================================================================================================
 # open ai key
@@ -23,6 +24,10 @@ openai.api_key = openai_token
 # streamlit 설정
 # ======================================================================================================================
 st.set_page_config(layout="wide")
+
+add_page_title()
+show_pages_from_config()
+
 st.title("온국민 ESG 가계부")
 
 st.markdown("""안녕하세요. 사용자님의 이름을 입력하시면 사용자님의 소비 내역을 ESG 기준으로 분석하여 제공합니다.\n

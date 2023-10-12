@@ -1,20 +1,21 @@
-from konlpy.tag import Komoran
 from collections import Counter, defaultdict
 from wordcloud import WordCloud
 from matplotlib import pyplot as plt
-from matplotlib.ticker import FuncFormatter
 from PIL import Image
 import matplotlib.font_manager as fm
 import streamlit as st
 import pandas as pd
 import numpy as np
 import time
-import re
+from st_pages import show_pages_from_config, add_page_title
 
 # ======================================================================================================================
 # streamlit 설정
 # ======================================================================================================================
 st.set_page_config(layout="wide")
+
+add_page_title()
+show_pages_from_config()
 
 # strealit font 설정 (구글 font만 가능)
 font = "Noto Sans Korean"
@@ -46,7 +47,6 @@ influence_df["nouns"] = influence_df["nouns"].apply(eval)
 # 변수 선언
 # ======================================================================================================================
 color_palette = ["#ffa505", "#ffb805", "#ffc905", "#ffe505", "#fffb05"]
-komoran = Komoran(userdic="./data/user.dic")
 brand = list(influence_df["브랜드"].unique())
 brand = ["브랜드 선택"] + brand
 e_word_count_dict = defaultdict(Counter)
