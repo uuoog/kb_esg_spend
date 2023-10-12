@@ -1,9 +1,9 @@
 [[pages]]
 path = "app.py"
-name = "ESG_가계부"
+name = "ESG 가계부"
 icon = "💳"
 
 [[pages]]
 path = "pages/page2.py"
-name = "브랜드별_ESG"
+name = "브랜드별 ESG"
 icon = "📰"
