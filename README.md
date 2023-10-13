@@ -1,6 +1,6 @@
 # 온 국민 ESG 가계부
 ESG 관점에서 소비 패턴 분석 서비스  
-[[서비스 바로가기](https://esg-spending.streamlit.app/)] 
+[[서비스 바로가기](https://kb-esg-spending.streamlit.app/)] 
 
 ## 1. 기획 의도
 ### 1-1. 트렌드: 인지를 넘어 소비 행동까지 이어짐
