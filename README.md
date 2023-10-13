@@ -54,14 +54,16 @@ E/S/G 라벨링이 된 기사 데이터 670건과 광고, 프로모션 등의 �
 -	ESG 지표: 산업통상자원부에서 발간한 K-ESG 평가 가이드라인 활용  
 
 ### 사용한 라이브러리
--	BeautifulSoup: 크롤링한 뉴스 데이터 파싱을 위해 활용
--	Pandas: 데이터 분석과 조작을 위해사용
--	Matplotlib: 소비 패턴 분석 시각화
--	Komoran: 뉴스 기사 키워드 추출
--	OpenAI GPT-3.5 Turbo 및 Text Embedding Ada: 텍스트 임베딩 및 소비 패턴 분석 결과 생성
--	scikit-learn: 데이터 분할 및 분류 모델 성능 평가에 사용
--	RandomForestClassifier: ESG 분류 모델 구축에 활용
--	RandomOverSampler: 데이터 불균형 해소를 위한 오버샘플링에 사용
+- BeautifulSoup: 크롤링한 뉴스 데이터 파싱을 위해 활용
+- Pandas: 데이터 분석과 조작을 위해사용
+- Matplotlib: 소비 패턴 분석 시각화
+- Komoran: 뉴스 기사 키워드 추출
+- Text Embedding API: 텍스트 임베딩
+- OpenAI GPT-3.5 Turbo: 소비 패턴 분석 결과
+- OpenAI DALL·E: 소비 패턴 분석 후 관련 배경 이미지 생성
+- scikit-learn: 데이터 분할 및 분류 모델 성능 평가에 사용
+- RandomForestClassifier: ESG 분류 모델 제작
+
 
 
 마치며, 본 기획안은 ESG 기반 소비 패턴의 중요성을 강조하며, ESG 지수 측정 및 소비 가이드라인 개발을 위한 서비스와 그에 사용된 데이터 및 라이브러리에 대해 소개하였습니다. 이러한 노력을 통해 소비자들은 더 나은 소비 판단을 할 수 있고, 기업들은 종합적인 ESG 평가를 통해 지속 가능한 경영 방침을 발전시킬 수 있을 것입니다.
